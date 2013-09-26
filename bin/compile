@@ -3,6 +3,67 @@
 # sync output
 $stdout.sync = true
 
+build_dir = ARGV[0]
+cache_dir = ARGV[1]
+
+system("mkdir -p #{cache_dir}/vendor") if !File.exist?(cache_dir)
+
+pxml_cache_path = "#{cache_dir}/vendor/pxml.deb"
+pxml_remote_url = ENV['PXML_DEB_PKG_URL']
+
+raise "CUSTOM_BUILDPACK: Cannot run buildpack without PXML_DEB_PKG_URL" if !pxml_remote_url
+
+puts "-----> Custom buildpack installing pxml.deb."
+if (!File.exist?(pxml_cache_path))
+  puts "       Fetching pxml.deb."
+  output = `curl #{pxml_remote_url} -o #{pxml_cache_path}`; result=$?.success?
+  raise "CUSTOM_BUILDPACK: Unable to download pxml.deb file (#{output})" if !result
+else
+  puts "       Found cached pxml.deb."
+end
+raise "CUSTOM_BUILDPACK: Unable to pxml.deb" if !File.exist?(pxml_cache_path)
+
+puts "-----> Custom buildpack extracting pxml.deb"
+output=`dpkg -x #{cache_file_path} #{build_dir}/pxml`; result=$?.success?
+raise "CUSTOM_BUILDPACK: Unable to install pxml.deb (#{output})" if !result
+puts "       Moving extracted files."
+`cp -r #{build_dir}/pxml/usr/. #{build_dir}`; result=$?.success?
+raise "CUSTOM_BUILDPACK: Unable to copy pxml extracted files." if !result
+puts "       Removing install files."
+`rm -rf #{build_dir}/pxml`; result=$?.success?
+raise "CUSTOM_BUILDPACK: Unable to remove pxml install files." if !result
+
+gs_remote_url = ENV['GHOST_SCRIPT_TAR_URL']
+gs_tar_cache_path = "#{cache_dir}/vendor/gs9.tar"
+gs_extracted_tar_cache_path = "#{cache_dir}/vendor/gs9"
+gs_bin_cache_path = "#{gs_extracted_tar_cache_path}/bin/gs"
+gs_bin_path = "#{build_dir}/bin/gs"
+puts "-----> Custom buildpack installing ghostscript."
+if (!File.exist?(gs_tar_cache_path))
+  puts "       Fetching install files."
+  output = `curl #{gs_remote_url} -o #{gs_tar_cache_path}`; result=$?.success?
+  raise "CUSTOM_BUILDPACK: Unable to download #{gs_remote_url} file (#{output})" if !result
+end
+
+if (!File.exist?(gs_bin_cache_path))
+  `rm -rf #{gs_extracted_tar_cache_path}` # Cleanup any any old files
+  puts "       Extracting ghostscript install files."
+  output=`tar xzvf #{gs_tar_cache_path}`; result=$?.success?
+  raise "CUSTOM_BUILDPACK: Unable to extract #{gs_tar_cache_path} file (#{output})" if !result
+  puts "       Configuring ghostscript install."
+  output=`#{gs_extracted_tar_cache_path}/configure --disable-cups --disable-gtk --with-drivers=FILES`; result=$?.success?
+  raise "CUSTOM_BUILDPACK: Unable to configure ghostscript file (#{output})" if !result
+  puts "       Compiling ghostscript binary."
+  output=`make -C #{gs_extracted_tar_cache_path}`; result=$?.success?
+  raise "CUSTOM_BUILDPACK: Unable to install ghostscript file (#{output})" if !result
+end
+
+if (!File.exist?(gs_bin_path))
+  puts "       Copying ghostscript binary."
+  output=`cp #{gs_bin_cache_path} #{gs_bin_path}`; result=$?.success?
+  raise "CUSTOM_BUILDPACK: Unable to copy ghostscript binary (#{output})" if !result
+end
+
 $:.unshift File.expand_path("../../lib", __FILE__)
 require "language_pack"
 require "language_pack/shell_helpers"
@@ -16,3 +77,5 @@ LanguagePack::Instrument.trace 'compile', 'app.compile' do
     end
   end
 end
+
+
