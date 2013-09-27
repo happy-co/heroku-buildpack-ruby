@@ -46,12 +46,12 @@ if prince_remote_license_url
     output = `curl #{prince_remote_license_url} -o #{prince_cache_license_path}`; result=$?.success?
     raise "CUSTOM_BUILDPACK: Unable to download prince_xml license file (#{output})" if !result
   else
-    puts "-----> Custom buildpack fetching found cached prince_xml license."
+    puts "-----> Custom buildpack found cached prince_xml license."
   end
 
   prince_build_license_path = "#{build_dir}/lib/prince/license/license.dat"
   puts "-----> Installing prince_xml license."
-  `mv #{prince_cache_license_path} #{prince_build_license_path}`; result=$?.success?
+  `cp #{prince_cache_license_path} #{prince_build_license_path}`; result=$?.success?
   raise "CUSTOM_BUILDPACK: Unable to move prince_xml license files." if !result
 end
 
