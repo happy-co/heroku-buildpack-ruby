@@ -6,10 +6,12 @@ $stdout.sync = true
 build_dir = ARGV[0]
 cache_dir = ARGV[1]
 
-system("mkdir -p #{cache_dir}/vendor") if !File.exist?(cache_dir)
+system("mkdir -p #{cache_dir}/vendor/princexml") if !File.exist?("#{cache_dir}/vendor/princexml")
+system("mkdir -p #{cache_dir}/vendor/gs") if !File.exist?("#{cache_dir}/vendor/gs")
 
-prince_xml_cache_path = "#{cache_dir}/vendor/prince_xml.deb"
+prince_xml_cache_path = "#{cache_dir}/vendor/princexml/prince_xml.deb"
 prince_xml_remote_url = ENV['PXML_DEB_PKG_URL']
+
 
 raise "CUSTOM_BUILDPACK: Cannot run buildpack without PXML_DEB_PKG_URL" if !prince_xml_remote_url
 
@@ -25,7 +27,7 @@ raise "CUSTOM_BUILDPACK: Unable to prince_xml.deb" if !File.exist?(prince_xml_ca
 
 
 puts "-----> Custom buildpack extracting prince_xml.deb"
-output=`dpkg -x #{cache_file_path} #{build_dir}/prince_xml`; result=$?.success?
+output=`dpkg -x #{prince_xml_cache_path} #{build_dir}/prince_xml`; result=$?.success?
 raise "CUSTOM_BUILDPACK: Unable to install prince_xml.deb (#{output})" if !result
 puts "       Moving extracted files."
 `cp -r #{build_dir}/prince_xml/usr/. #{build_dir}`; result=$?.success?
@@ -35,23 +37,25 @@ puts "       Removing install files."
 raise "CUSTOM_BUILDPACK: Unable to remove prince_xml install files." if !result
 
 
-remote_license_url = ENV['PXML_LICENSE_URL']
-cache_license_path = "#{cache_dir}/vendor/prince_xml/license.dat"
+prince_remote_license_url = ENV['PXML_LICENSE_URL']
+prince_cache_license_path = "#{cache_dir}/vendor/princexml/license.dat"
 
-if remote_license_url
-  if !File.exist? cache_license_path
+if prince_remote_license_url
+  if !File.exist? prince_cache_license_path
     puts "-----> Custom buildpack fetching prince_xml license."
-    output = `curl #{remote_license_url} -o #{cache_license_path}`; result=$?.success?
+    output = `curl #{prince_remote_license_url} -o #{prince_cache_license_path}`; result=$?.success?
     raise "CUSTOM_BUILDPACK: Unable to download prince_xml license file (#{output})" if !result
   else
     puts "-----> Custom buildpack fetching found cached prince_xml license."
   end
 
-  build_license_path = "#{build_dir}/lib/prince/license/license.dat"
+  prince_build_license_path = "#{build_dir}/lib/prince/license/license.dat"
   puts "-----> Installing prince_xml license."
-  `mv #{cache_license_path} #{build_license_path}`; result=$?.success?
+  `mv #{prince_cache_license_path} #{prince_build_license_path}`; result=$?.success?
   raise "CUSTOM_BUILDPACK: Unable to move prince_xml license files." if !result
 end
+
+puts "-----> No PrinceXML license found." if !prince_build_license_path
 
 
 
