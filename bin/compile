@@ -52,7 +52,7 @@ if prince_remote_license_url
   prince_build_license_path = "#{build_dir}/lib/prince/license/license.dat"
   puts "-----> Installing prince_xml license."
   `cp #{prince_cache_license_path} #{prince_build_license_path}`; result=$?.success?
-  raise "CUSTOM_BUILDPACK: Unable to move prince_xml license files." if !result
+  raise "CUSTOM_BUILDPACK: Unable to move prince_xml license files." if !result || !File.exist? prince_build_license_path
 end
 
 puts "-----> No PrinceXML license found." if !prince_build_license_path
