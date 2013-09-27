@@ -8,30 +8,52 @@ cache_dir = ARGV[1]
 
 system("mkdir -p #{cache_dir}/vendor") if !File.exist?(cache_dir)
 
-pxml_cache_path = "#{cache_dir}/vendor/pxml.deb"
-pxml_remote_url = ENV['PXML_DEB_PKG_URL']
+prince_xml_cache_path = "#{cache_dir}/vendor/prince_xml.deb"
+prince_xml_remote_url = ENV['PXML_DEB_PKG_URL']
 
-raise "CUSTOM_BUILDPACK: Cannot run buildpack without PXML_DEB_PKG_URL" if !pxml_remote_url
+raise "CUSTOM_BUILDPACK: Cannot run buildpack without PXML_DEB_PKG_URL" if !prince_xml_remote_url
 
-puts "-----> Custom buildpack installing pxml.deb."
-if (!File.exist?(pxml_cache_path))
-  puts "       Fetching pxml.deb."
-  output = `curl #{pxml_remote_url} -o #{pxml_cache_path}`; result=$?.success?
-  raise "CUSTOM_BUILDPACK: Unable to download pxml.deb file (#{output})" if !result
+puts "-----> Custom buildpack installing prince_xml.deb."
+if (!File.exist?(prince_xml_cache_path))
+  puts "       Fetching prince_xml.deb."
+  output = `curl #{prince_xml_remote_url} -o #{prince_xml_cache_path}`; result=$?.success?
+  raise "CUSTOM_BUILDPACK: Unable to download prince_xml.deb file (#{output})" if !result
 else
-  puts "       Found cached pxml.deb."
+  puts "       Found cached prince_xml.deb."
 end
-raise "CUSTOM_BUILDPACK: Unable to pxml.deb" if !File.exist?(pxml_cache_path)
+raise "CUSTOM_BUILDPACK: Unable to prince_xml.deb" if !File.exist?(prince_xml_cache_path)
 
-puts "-----> Custom buildpack extracting pxml.deb"
-output=`dpkg -x #{cache_file_path} #{build_dir}/pxml`; result=$?.success?
-raise "CUSTOM_BUILDPACK: Unable to install pxml.deb (#{output})" if !result
+
+puts "-----> Custom buildpack extracting prince_xml.deb"
+output=`dpkg -x #{cache_file_path} #{build_dir}/prince_xml`; result=$?.success?
+raise "CUSTOM_BUILDPACK: Unable to install prince_xml.deb (#{output})" if !result
 puts "       Moving extracted files."
-`cp -r #{build_dir}/pxml/usr/. #{build_dir}`; result=$?.success?
-raise "CUSTOM_BUILDPACK: Unable to copy pxml extracted files." if !result
+`cp -r #{build_dir}/prince_xml/usr/. #{build_dir}`; result=$?.success?
+raise "CUSTOM_BUILDPACK: Unable to copy prince_xml extracted files." if !result
 puts "       Removing install files."
-`rm -rf #{build_dir}/pxml`; result=$?.success?
-raise "CUSTOM_BUILDPACK: Unable to remove pxml install files." if !result
+`rm -rf #{build_dir}/prince_xml`; result=$?.success?
+raise "CUSTOM_BUILDPACK: Unable to remove prince_xml install files." if !result
+
+
+remote_license_url = ENV['PXML_LICENSE_URL']
+cache_license_path = "#{cache_dir}/vendor/prince_xml/license.dat"
+
+if remote_license_url
+  if !File.exist? cache_license_path
+    puts "-----> Custom buildpack fetching prince_xml license."
+    output = `curl #{remote_license_url} -o #{cache_license_path}`; result=$?.success?
+    raise "CUSTOM_BUILDPACK: Unable to download prince_xml license file (#{output})" if !result
+  else
+    puts "-----> Custom buildpack fetching found cached prince_xml license."
+  end
+
+  build_license_path = "#{build_dir}/lib/prince/license/license.dat"
+  puts "-----> Installing prince_xml license."
+  `mv #{cache_license_path} #{build_license_path}`; result=$?.success?
+  raise "CUSTOM_BUILDPACK: Unable to move prince_xml license files." if !result
+end
+
+
 
 gs_remote_url = ENV['GHOST_SCRIPT_TAR_URL']
 gs_tar_cache_path = "#{cache_dir}/vendor/gs9.tar"
