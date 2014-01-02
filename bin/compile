@@ -6,9 +6,9 @@ $stdout.sync = true
 build_dir = ARGV[0]
 cache_dir = ARGV[1]
 
-system("mkdir -p #{cache_dir}/vendor/princexml") if !File.exist?("#{cache_dir}/vendor/princexml")
-system("mkdir -p #{cache_dir}/vendor/gs9") if !File.exist?("#{cache_dir}/vendor/gs9")
-system("mkdir -p #{build_dir}/lib/gs9/bin") if !File.exist?("#{build_dir}/lib/gs9/bin")
+system("mkdir -p #{cache_dir}/vendor/princexml")
+system("mkdir -p #{cache_dir}/vendor/gs9")
+system("mkdir -p #{build_dir}/lib/gs9/bin")
 
 gs_remote_url = ENV['GHOST_SCRIPT_TAR_URL']
 gs_tar_cache_path = "#{cache_dir}/vendor/gs9.tar.gz"
@@ -18,14 +18,14 @@ gs_bin_path = "#{build_dir}/lib/gs9/bin/gs"
 puts "-----> Custom buildpack installing ghostscript."
 if (!File.exist?(gs_tar_cache_path))
   puts "       Fetching install files."
-  output = `curl #{gs_remote_url} -o #{gs_tar_cache_path}`; result=$?.success?
+  output = `(cd #{cache_dir}/vendor && curl #{gs_remote_url} -o gs9.tar.gz)`; result=$?.success?
   raise "CUSTOM_BUILDPACK: Unable to download #{gs_remote_url} file (#{output})" if !result
 end
 
 if (!File.exist?(gs_bin_cache_path))
   `rm -rf #{gs_extracted_tar_cache_path}` # Cleanup any any old files
   puts "       Extracting ghostscript install files."
-  output=`(mkdir -p #{cache_dir}/vendor/gs9 && cd #{gs_extracted_tar_cache_path} && tar xzvf gs9.tar.gz)`; result=$?.success?
+  output=`(cd #{cache_dir}/vendor && tar xzvf gs9.tar.gz)`; result=$?.success?
   raise "CUSTOM_BUILDPACK: Unable to extract #{gs_tar_cache_path} file (#{output})" if !result
   puts "       Configuring ghostscript install."
   output=`#{gs_extracted_tar_cache_path}/configure --disable-cups --disable-gtk --with-drivers=FILES`; result=$?.success?
