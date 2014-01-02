@@ -75,7 +75,7 @@ end
 if (!File.exist?(gs_bin_cache_path))
   `rm -rf #{gs_extracted_tar_cache_path}` # Cleanup any any old files
   puts "       Extracting ghostscript install files."
-  output=`tar xzvf #{gs_tar_cache_path} -C gs_extracted_tar_cache_path`; result=$?.success?
+  output=`tar xzvf #{gs_tar_cache_path} -C #{gs_extracted_tar_cache_path}`; result=$?.success?
   raise "CUSTOM_BUILDPACK: Unable to extract #{gs_tar_cache_path} file (#{output})" if !result
   puts "       Configuring ghostscript install."
   output=`#{gs_extracted_tar_cache_path}/configure --disable-cups --disable-gtk --with-drivers=FILES`; result=$?.success?
