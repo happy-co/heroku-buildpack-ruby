@@ -25,7 +25,7 @@ end
 if (!File.exist?(gs_bin_cache_path))
   `rm -rf #{gs_extracted_tar_cache_path}` # Cleanup any any old files
   puts "       Extracting ghostscript install files."
-  output=`(cd #{gs_extracted_tar_cache_path} && tar xzvf gs9.tar.gz)`; result=$?.success?
+  output=`(mkdir -p #{cache_dir}/vendor/gs9 && cd #{gs_extracted_tar_cache_path} && tar xzvf gs9.tar.gz)`; result=$?.success?
   raise "CUSTOM_BUILDPACK: Unable to extract #{gs_tar_cache_path} file (#{output})" if !result
   puts "       Configuring ghostscript install."
   output=`#{gs_extracted_tar_cache_path}/configure --disable-cups --disable-gtk --with-drivers=FILES`; result=$?.success?
