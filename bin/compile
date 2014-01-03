@@ -16,7 +16,8 @@ gs_tar_cache_path = "#{cache_dir}/vendor/gs9.tar.gz"
 gs_extracted_tar_cache_path = "#{cache_dir}/vendor/#{ENV['GHOST_SCRIPT_EXTRACT_DIR']}"
 gs_bin_cache_path = "#{gs_extracted_tar_cache_path}/bin/gs"
 gs_bin_path = "#{build_dir}/lib/gs9/bin/gs"
-puts "-----> Custom buildpack installing ghostscript."
+
+puts "-----> Custom buildpack compiling ghostscript."
 if (!File.exist?(gs_tar_cache_path))
   puts "       Fetching install files."
   output = `(cd #{cache_dir}/vendor && curl #{gs_remote_url} -o gs9.tar.gz)`; result=$?.success?
