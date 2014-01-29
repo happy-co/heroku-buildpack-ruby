@@ -4,6 +4,40 @@ Features:
 
 Bugfixes:
 
+## v92 (01/27/2014)
+
+Features:
+
+Bugfixes:
+
+* Only display rake error messages if a `Rakefile` exists
+* when detecting for ruby version, don't use stderr messages
+
+## v91 (01/16/2014)
+
+Features:
+
+* Parallel gem installation with bundler 1.5.2
+
+Bugfixes:
+
+
+## v90 (01/09/2014)
+
+Features:
+
+* Rollback v89 due to bug in bundler 1.5.1
+
+Bugfixes:
+
+## v89 (01/09/2014)
+
+Features:
+
+* Use most recent version of bundler with support for parallel Gem installation
+
+Bugfixes:
+
 ## v86 (12/11/2013)
 
 Features:
