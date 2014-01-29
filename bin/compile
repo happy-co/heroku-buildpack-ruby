@@ -57,7 +57,7 @@ if !File.exist?(prince_xml_cache_path) || rebuild_buildpack
 else
   puts "       Found cached prince_xml.deb."
 end
-raise "CUSTOM_BUILDPACK: Unable to prince_xml.deb" if !File.exist?(prince_xml_cache_path) || rebuild_buildpack
+raise "CUSTOM_BUILDPACK: Unable to prince_xml.deb" if !File.exist?(prince_xml_cache_path)
 
 
 puts "-----> Custom buildpack extracting prince_xml.deb"
