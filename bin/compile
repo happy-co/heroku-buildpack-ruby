@@ -36,7 +36,7 @@ if !File.exist?(gs_bin_cache_path) || rebuild_buildpack
   output=`(cd #{gs_extracted_tar_cache_path} && ./autogen.sh --disable-cups --disable-gtk --with-drivers=FILES)`; result=$?.success?
   raise "CUSTOM_BUILDPACK: Unable to configure ghostscript file (#{output})" if !result
   puts "       Compiling ghostscript binary."
-  output=`make -C #{gs_extracted_tar_cache_path}`; result=$?.success?
+  output=`(cd #{gs_extracted_tar_cache_path} && make)`; result=$?.success?
   raise "CUSTOM_BUILDPACK: Unable to install ghostscript file (#{output})" if !result
 end
 
