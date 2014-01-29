@@ -11,6 +11,7 @@ raise "CUSTOM_BUILDPACK: Unable to create directory #{cache_dir}/vendor/princexm
 output=`mkdir -p #{build_dir}/lib/gs9/bin`; result=$?.success?
 raise "CUSTOM_BUILDPACK: Unable to create directory #{build_dir}/lib/gs9/bin (#{output})" if !result
 
+rebuild_buildpack = ENV['REBUILD_BUILDPACK'] == 'true'
 gs_remote_url = ENV['GHOST_SCRIPT_TAR_URL']
 gs_tar_cache_path = "#{cache_dir}/vendor/gs9.tar.gz"
 gs_extracted_tar_cache_path = "#{cache_dir}/vendor/#{ENV['GHOST_SCRIPT_EXTRACT_DIR']}"
@@ -18,13 +19,13 @@ gs_bin_cache_path = "#{gs_extracted_tar_cache_path}/bin/gs"
 gs_bin_path = "#{build_dir}/lib/gs9/bin/gs"
 
 puts "-----> Custom buildpack compiling ghostscript."
-if (!File.exist?(gs_tar_cache_path))
+if !File.exist?(gs_tar_cache_path) || rebuild_buildpack
   puts "       Fetching install files."
   output = `(cd #{cache_dir}/vendor && curl #{gs_remote_url} -o gs9.tar.gz)`; result=$?.success?
   raise "CUSTOM_BUILDPACK: Unable to download #{gs_remote_url} file (#{output})" if !result
 end
 
-if (!File.exist?(gs_bin_cache_path))
+if !File.exist?(gs_bin_cache_path) || rebuild_buildpack
   puts "       Extracting ghostscript install files."
   output=`(cd #{cache_dir}/vendor && tar xzvf gs9.tar.gz)`; result=$?.success?
   raise "CUSTOM_BUILDPACK: Unable to extract #{gs_tar_cache_path} file (#{output})" if !result
@@ -36,7 +37,7 @@ if (!File.exist?(gs_bin_cache_path))
   raise "CUSTOM_BUILDPACK: Unable to install ghostscript file (#{output})" if !result
 end
 
-if (!File.exist?(gs_bin_path))
+if !File.exist?(gs_bin_path) || rebuild_buildpack
   puts "       Copying ghostscript binary."
   output=`cp #{gs_bin_cache_path} #{gs_bin_path}`; result=$?.success?
   raise "CUSTOM_BUILDPACK: Unable to copy ghostscript binary (#{output})" if !result
@@ -49,14 +50,14 @@ prince_xml_remote_url = ENV['PXML_DEB_PKG_URL']
 raise "CUSTOM_BUILDPACK: Cannot run buildpack without PXML_DEB_PKG_URL" if !prince_xml_remote_url
 
 puts "-----> Custom buildpack installing prince_xml.deb."
-if (!File.exist?(prince_xml_cache_path))
+if !File.exist?(prince_xml_cache_path) || rebuild_buildpack
   puts "       Fetching prince_xml.deb."
   output = `curl #{prince_xml_remote_url} -o #{prince_xml_cache_path}`; result=$?.success?
   raise "CUSTOM_BUILDPACK: Unable to download prince_xml.deb file (#{output})" if !result
 else
   puts "       Found cached prince_xml.deb."
 end
-raise "CUSTOM_BUILDPACK: Unable to prince_xml.deb" if !File.exist?(prince_xml_cache_path)
+raise "CUSTOM_BUILDPACK: Unable to prince_xml.deb" if !File.exist?(prince_xml_cache_path) || rebuild_buildpack
 
 
 puts "-----> Custom buildpack extracting prince_xml.deb"
@@ -74,7 +75,7 @@ prince_remote_license_url = ENV['PXML_LICENSE_URL']
 prince_cache_license_path = "#{cache_dir}/vendor/princexml/license.dat"
 
 if prince_remote_license_url
-  if !File.exist? prince_cache_license_path
+  if !File.exist? prince_cache_license_path || rebuild_buildpack
     puts "-----> Custom buildpack fetching prince_xml license."
     output = `curl #{prince_remote_license_url} -o #{prince_cache_license_path}`; result=$?.success?
     raise "CUSTOM_BUILDPACK: Unable to download prince_xml license file (#{output})" if !result
