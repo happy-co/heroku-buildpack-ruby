@@ -31,6 +31,8 @@ if !File.exist?(gs_bin_cache_path) || rebuild_buildpack
   puts "       Extracting ghostscript install files."
   `rm -f #{gs_bin_cache_path}`
   `rm -rf #{gs_extracted_tar_cache_path}`
+  output=`(cd #{cache_dir} && mkdir vendor)`; result=$?.success?
+  raise "CUSTOM_BUILDPACK: Unable to create directory vendor in #{cache_dir} (#{output})" if !result
   output=`(cd #{cache_dir}/vendor && tar xzvf gs9.tar.gz)`; result=$?.success?
   raise "CUSTOM_BUILDPACK: Unable to extract #{gs_tar_cache_path} file (#{output})" if !result
   puts "       Configuring ghostscript install."
