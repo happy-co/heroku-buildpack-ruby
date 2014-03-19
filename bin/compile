@@ -10,13 +10,6 @@ def custom_build
 
   env_hash =  LanguagePack::ShellHelpers.user_env_hash
 
-  if env_dir.exist? && env_dir.directory?
-    env_dir.each_child do |file|
-      key   = file.basename.to_s
-      value = file.read.strip
-      env_hash[key] = value unless blacklist?(key)
-    end
-  end
 
   output=`mkdir -p #{cache_dir}/vendor/princexml`; result=$?.success?
   raise "CUSTOM_BUILDPACK: Unable to create directory #{cache_dir}/vendor/princexml (#{output})" if !result
