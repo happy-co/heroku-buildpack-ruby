@@ -3,101 +3,113 @@
 # sync output
 $stdout.sync = true
 
-build_dir = ARGV[0]
-cache_dir = ARGV[1]
-env_dir = ARGV[2]
+def custom_build
+  build_dir = ARGV[0]
+  cache_dir = ARGV[1]
+  env_dir = ARGV[2]
 
-output=`mkdir -p #{cache_dir}/vendor/princexml`; result=$?.success?
-raise "CUSTOM_BUILDPACK: Unable to create directory #{cache_dir}/vendor/princexml (#{output})" if !result
-output=`mkdir -p #{build_dir}/lib/gs9/bin`; result=$?.success?
-raise "CUSTOM_BUILDPACK: Unable to create directory #{build_dir}/lib/gs9/bin (#{output})" if !result
+  env_hash =  LanguagePack::ShellHelpers.user_env_hash
 
-rebuild_buildpack = ENV['REBUILD_BUILDPACK'] == 'true'
-gs_remote_url = ENV['GHOST_SCRIPT_TAR_URL']
-puts "rebuild -- #{rebuild_buildpack} // gs_remote_url -- #{gs_remote_url}"
-gs_tar_cache_path = "#{cache_dir}/vendor/gs9.tar.gz"
-gs_extracted_tar_cache_path = "#{cache_dir}/vendor/#{ENV['GHOST_SCRIPT_EXTRACT_DIR']}"
-gs_bin_cache_path = "#{gs_extracted_tar_cache_path}/bin/gs"
-gs_bin_path = "#{build_dir}/lib/gs9/bin/gs"
-
-puts "-----> Custom buildpack compiling ghostscript."
-if !File.exist?(gs_tar_cache_path) || rebuild_buildpack
-  puts "       Fetching install files."
-  `mkdir #{cache_dir}/vendor`
-  `rm -f #{cache_dir}/vendor/gs9.tar.gz}`
-  output = `(cd #{cache_dir}/vendor && curl #{gs_remote_url} -o gs9.tar.gz)`; result=$?.success?
-  raise "CUSTOM_BUILDPACK: Unable to download #{gs_remote_url} file (#{output})" if !result
-end
-
-if !File.exist?(gs_bin_cache_path) || rebuild_buildpack
-  puts "       Extracting ghostscript install files."
-  `rm -f #{gs_bin_cache_path}`
-  `rm -rf #{gs_extracted_tar_cache_path}`
-  output=`(cd #{cache_dir} && mkdir vendor)`; result=$?.success?
-  raise "CUSTOM_BUILDPACK: Unable to create directory vendor in #{cache_dir} (#{output})" if !result
-  output=`(cd #{cache_dir}/vendor && tar xzvf gs9.tar.gz)`; result=$?.success?
-  raise "CUSTOM_BUILDPACK: Unable to extract #{gs_tar_cache_path} file (#{output})" if !result
-  puts "       Configuring ghostscript install."
-  output=`(cd #{gs_extracted_tar_cache_path} && ./configure --disable-cups --disable-gtk --with-drivers=FILES)`; result=$?.success?
-  raise "CUSTOM_BUILDPACK: Unable to configure ghostscript file (#{output})" if !result
-  puts "       Compiling ghostscript binary."
-  output=`make -C #{gs_extracted_tar_cache_path}`; result=$?.success?
-  raise "CUSTOM_BUILDPACK: Unable to install ghostscript file (#{output})" if !result
-end
-
-if !File.exist?(gs_bin_path) || rebuild_buildpack
-  puts "       Copying ghostscript binary."
-  output=`cp #{gs_bin_cache_path} #{gs_bin_path}`; result=$?.success?
-  raise "CUSTOM_BUILDPACK: Unable to copy ghostscript binary (#{output})" if !result
-end
-
-prince_xml_cache_path = "#{cache_dir}/vendor/princexml/prince_xml.deb"
-prince_xml_remote_url = ENV['PXML_DEB_PKG_URL']
-
-
-raise "CUSTOM_BUILDPACK: Cannot run buildpack without PXML_DEB_PKG_URL" if !prince_xml_remote_url
-
-puts "-----> Custom buildpack installing prince_xml.deb."
-if !File.exist?(prince_xml_cache_path) || rebuild_buildpack
-  puts "       Fetching prince_xml.deb."
-  output = `curl #{prince_xml_remote_url} -o #{prince_xml_cache_path}`; result=$?.success?
-  raise "CUSTOM_BUILDPACK: Unable to download prince_xml.deb file (#{output})" if !result
-else
-  puts "       Found cached prince_xml.deb."
-end
-raise "CUSTOM_BUILDPACK: Unable to prince_xml.deb" if !File.exist?(prince_xml_cache_path)
-
-
-puts "-----> Custom buildpack extracting prince_xml.deb"
-output=`dpkg -x #{prince_xml_cache_path} #{build_dir}/prince_xml`; result=$?.success?
-raise "CUSTOM_BUILDPACK: Unable to install prince_xml.deb (#{output})" if !result
-puts "       Moving extracted files."
-`cp -r #{build_dir}/prince_xml/usr/. #{build_dir}`; result=$?.success?
-raise "CUSTOM_BUILDPACK: Unable to copy prince_xml extracted files." if !result
-puts "       Removing install files."
-`rm -rf #{build_dir}/prince_xml`; result=$?.success?
-raise "CUSTOM_BUILDPACK: Unable to remove prince_xml install files." if !result
-
-
-prince_remote_license_url = ENV['PXML_LICENSE_URL']
-prince_cache_license_path = "#{cache_dir}/vendor/princexml/license.dat"
-
-if prince_remote_license_url
-  if !File.exist? prince_cache_license_path || rebuild_buildpack
-    puts "-----> Custom buildpack fetching prince_xml license."
-    output = `curl #{prince_remote_license_url} -o #{prince_cache_license_path}`; result=$?.success?
-    raise "CUSTOM_BUILDPACK: Unable to download prince_xml license file (#{output})" if !result
-  else
-    puts "-----> Custom buildpack found cached prince_xml license."
+  if env_dir.exist? && env_dir.directory?
+    env_dir.each_child do |file|
+      key   = file.basename.to_s
+      value = file.read.strip
+      env_hash[key] = value unless blacklist?(key)
+    end
   end
 
-  prince_build_license_path = "#{build_dir}/lib/prince/license/license.dat"
-  puts "-----> Installing prince_xml license."
-  `cp #{prince_cache_license_path} #{prince_build_license_path}`; result=$?.success?
-  raise "CUSTOM_BUILDPACK: Unable to move prince_xml license files." if !result
-end
+  output=`mkdir -p #{cache_dir}/vendor/princexml`; result=$?.success?
+  raise "CUSTOM_BUILDPACK: Unable to create directory #{cache_dir}/vendor/princexml (#{output})" if !result
+  output=`mkdir -p #{build_dir}/lib/gs9/bin`; result=$?.success?
+  raise "CUSTOM_BUILDPACK: Unable to create directory #{build_dir}/lib/gs9/bin (#{output})" if !result
 
-puts "-----> No PrinceXML license found." if !prince_build_license_path
+  rebuild_buildpack = env_hash['REBUILD_BUILDPACK'] == 'true'
+  gs_remote_url = env_hash['GHOST_SCRIPT_TAR_URL']
+  puts "rebuild -- #{rebuild_buildpack} // gs_remote_url -- #{gs_remote_url}"
+  gs_tar_cache_path = "#{cache_dir}/vendor/gs9.tar.gz"
+  gs_extracted_tar_cache_path = "#{cache_dir}/vendor/#{env_hash['GHOST_SCRIPT_EXTRACT_DIR']}"
+  gs_bin_cache_path = "#{gs_extracted_tar_cache_path}/bin/gs"
+  gs_bin_path = "#{build_dir}/lib/gs9/bin/gs"
+
+  puts "-----> Custom buildpack compiling ghostscript."
+  if !File.exist?(gs_tar_cache_path) || rebuild_buildpack
+    puts "       Fetching install files."
+    `mkdir #{cache_dir}/vendor`
+    `rm -f #{cache_dir}/vendor/gs9.tar.gz}`
+    output = `(cd #{cache_dir}/vendor && curl #{gs_remote_url} -o gs9.tar.gz)`; result=$?.success?
+    raise "CUSTOM_BUILDPACK: Unable to download #{gs_remote_url} file (#{output})" if !result
+  end
+
+  if !File.exist?(gs_bin_cache_path) || rebuild_buildpack
+    puts "       Extracting ghostscript install files."
+    `rm -f #{gs_bin_cache_path}`
+    `rm -rf #{gs_extracted_tar_cache_path}`
+    output=`(cd #{cache_dir} && mkdir vendor)`; result=$?.success?
+    raise "CUSTOM_BUILDPACK: Unable to create directory vendor in #{cache_dir} (#{output})" if !result
+    output=`(cd #{cache_dir}/vendor && tar xzvf gs9.tar.gz)`; result=$?.success?
+    raise "CUSTOM_BUILDPACK: Unable to extract #{gs_tar_cache_path} file (#{output})" if !result
+    puts "       Configuring ghostscript install."
+    output=`(cd #{gs_extracted_tar_cache_path} && ./configure --disable-cups --disable-gtk --with-drivers=FILES)`; result=$?.success?
+    raise "CUSTOM_BUILDPACK: Unable to configure ghostscript file (#{output})" if !result
+    puts "       Compiling ghostscript binary."
+    output=`make -C #{gs_extracted_tar_cache_path}`; result=$?.success?
+    raise "CUSTOM_BUILDPACK: Unable to install ghostscript file (#{output})" if !result
+  end
+
+  if !File.exist?(gs_bin_path) || rebuild_buildpack
+    puts "       Copying ghostscript binary."
+    output=`cp #{gs_bin_cache_path} #{gs_bin_path}`; result=$?.success?
+    raise "CUSTOM_BUILDPACK: Unable to copy ghostscript binary (#{output})" if !result
+  end
+
+  prince_xml_cache_path = "#{cache_dir}/vendor/princexml/prince_xml.deb"
+  prince_xml_remote_url = env_hash['PXML_DEB_PKG_URL']
+
+
+  raise "CUSTOM_BUILDPACK: Cannot run buildpack without PXML_DEB_PKG_URL" if !prince_xml_remote_url
+
+  puts "-----> Custom buildpack installing prince_xml.deb."
+  if !File.exist?(prince_xml_cache_path) || rebuild_buildpack
+    puts "       Fetching prince_xml.deb."
+    output = `curl #{prince_xml_remote_url} -o #{prince_xml_cache_path}`; result=$?.success?
+    raise "CUSTOM_BUILDPACK: Unable to download prince_xml.deb file (#{output})" if !result
+  else
+    puts "       Found cached prince_xml.deb."
+  end
+  raise "CUSTOM_BUILDPACK: Unable to prince_xml.deb" if !File.exist?(prince_xml_cache_path)
+
+
+  puts "-----> Custom buildpack extracting prince_xml.deb"
+  output=`dpkg -x #{prince_xml_cache_path} #{build_dir}/prince_xml`; result=$?.success?
+  raise "CUSTOM_BUILDPACK: Unable to install prince_xml.deb (#{output})" if !result
+  puts "       Moving extracted files."
+  `cp -r #{build_dir}/prince_xml/usr/. #{build_dir}`; result=$?.success?
+  raise "CUSTOM_BUILDPACK: Unable to copy prince_xml extracted files." if !result
+  puts "       Removing install files."
+  `rm -rf #{build_dir}/prince_xml`; result=$?.success?
+  raise "CUSTOM_BUILDPACK: Unable to remove prince_xml install files." if !result
+
+
+  prince_remote_license_url = env_hash['PXML_LICENSE_URL']
+  prince_cache_license_path = "#{cache_dir}/vendor/princexml/license.dat"
+
+  if prince_remote_license_url
+    if !File.exist? prince_cache_license_path || rebuild_buildpack
+      puts "-----> Custom buildpack fetching prince_xml license."
+      output = `curl #{prince_remote_license_url} -o #{prince_cache_license_path}`; result=$?.success?
+      raise "CUSTOM_BUILDPACK: Unable to download prince_xml license file (#{output})" if !result
+    else
+      puts "-----> Custom buildpack found cached prince_xml license."
+    end
+
+    prince_build_license_path = "#{build_dir}/lib/prince/license/license.dat"
+    puts "-----> Installing prince_xml license."
+    `cp #{prince_cache_license_path} #{prince_build_license_path}`; result=$?.success?
+    raise "CUSTOM_BUILDPACK: Unable to move prince_xml license files." if !result
+  end
+
+  puts "-----> No PrinceXML license found." if !prince_build_license_path
+end
 
 
 
@@ -110,6 +122,9 @@ require "language_pack/shell_helpers"
 LanguagePack::Instrument.trace 'compile', 'app.compile' do
   if pack = LanguagePack.detect(ARGV[0], ARGV[1])
     LanguagePack::ShellHelpers.initialize_env(ARGV[2])
+
+    custom_build
+
     pack.topic("Compiling #{pack.name}")
     pack.log("compile") do
       pack.compile
