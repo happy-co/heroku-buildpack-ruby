@@ -18,7 +18,6 @@ def custom_build
 
   rebuild_buildpack = env_hash['REBUILD_BUILDPACK'] == 'true'
   gs_remote_url = env_hash['GHOST_SCRIPT_TAR_URL']
-  puts "rebuild -- #{rebuild_buildpack} // gs_remote_url -- #{gs_remote_url}"
   gs_tar_cache_path = "#{cache_dir}/vendor/gs9.tar.gz"
   gs_extracted_tar_cache_path = "#{cache_dir}/vendor/#{env_hash['GHOST_SCRIPT_EXTRACT_DIR']}"
   gs_bin_cache_path = "#{gs_extracted_tar_cache_path}/bin/gs"
@@ -27,7 +26,6 @@ def custom_build
   puts "-----> Custom buildpack compiling ghostscript."
   if !File.exist?(gs_tar_cache_path) || rebuild_buildpack
     puts "       Fetching install files."
-    `mkdir #{cache_dir}/vendor`
     `rm -f #{cache_dir}/vendor/gs9.tar.gz}`
     output = `(cd #{cache_dir}/vendor && curl #{gs_remote_url} -o gs9.tar.gz)`; result=$?.success?
     raise "CUSTOM_BUILDPACK: Unable to download #{gs_remote_url} file (#{output})" if !result
@@ -37,8 +35,6 @@ def custom_build
     puts "       Extracting ghostscript install files."
     `rm -f #{gs_bin_cache_path}`
     `rm -rf #{gs_extracted_tar_cache_path}`
-    output=`(cd #{cache_dir} && mkdir vendor)`; result=$?.success?
-    raise "CUSTOM_BUILDPACK: Unable to create directory vendor in #{cache_dir} (#{output})" if !result
     output=`(cd #{cache_dir}/vendor && tar xzvf gs9.tar.gz)`; result=$?.success?
     raise "CUSTOM_BUILDPACK: Unable to extract #{gs_tar_cache_path} file (#{output})" if !result
     puts "       Configuring ghostscript install."
