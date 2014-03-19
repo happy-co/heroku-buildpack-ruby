@@ -13,6 +13,7 @@ raise "CUSTOM_BUILDPACK: Unable to create directory #{build_dir}/lib/gs9/bin (#{
 
 rebuild_buildpack = ENV['REBUILD_BUILDPACK'] == 'true'
 gs_remote_url = ENV['GHOST_SCRIPT_TAR_URL']
+puts "rebuild -- #{rebuild_buildpack} // gs_remote_url -- #{gs_remote_url}"
 gs_tar_cache_path = "#{cache_dir}/vendor/gs9.tar.gz"
 gs_extracted_tar_cache_path = "#{cache_dir}/vendor/#{ENV['GHOST_SCRIPT_EXTRACT_DIR']}"
 gs_bin_cache_path = "#{gs_extracted_tar_cache_path}/bin/gs"
