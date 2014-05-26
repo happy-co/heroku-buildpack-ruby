@@ -109,7 +109,8 @@ def custom_build
 
   if !File.exist?("#{cache_dir}/#{file_name}") || rebuild_buildpack
     puts "-----> Fetching PhantomJS binaries"
-    output = `curl #{buildpack_phantomjs_package} -L -s -o #{cache_dir}/#{file_name}`; result=$?.success?
+    output = `curl #{buildpack_phantomjs_package} -o #{cache_dir}/#{file_name}`; result=$?.success?
+    puts output
   end
 
   if !File.exist?("#{build_dir}/vendor/#{file_name}") || rebuild_buildpack
