@@ -107,16 +107,16 @@ def custom_build
 
   puts "-----> Custom buildpack compiling phantomjs."
 
-  if !File.exist?("#{cache_dir}/vendor/#{file_name}") || rebuild_buildpack
+  if !File.exist?("#{cache_dir}/#{file_name}") || rebuild_buildpack
     puts "-----> Fetching PhantomJS binaries"
-    output = `curl #{buildpack_phantomjs_package} -L -s -o #{cache_dir}/vendor/#{file_name}`; result=$?.success?
+    output = `curl #{buildpack_phantomjs_package} -L -s -o #{cache_dir}/#{file_name}`; result=$?.success?
     raise "CUSTOM_BUILDPACK: Unable to download #{gs_remote_url} file (#{output})" if !result
   end
 
   puts "-----> Extracting PhantomJS binaries"
 
   if !File.exist?("#{build_dir}/vendor/#{file_name}") || rebuild_buildpack
-    `tar jxf #{cache_dir}/#{file_name} -C cache_dir`
+    `tar jxf #{cache_dir}/#{file_name} -C #{cache_dir}`
     `mv #{cache_dir}/#{archive_name} #{build_dir}/vendor/phantomjs`
   end
 end
