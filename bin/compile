@@ -102,9 +102,9 @@ def custom_build
 
   # PHANTOM JS
 
-  archive_name = "phantomjs-1.9.7-linux-x86_64"
+  archive_name = "phantomjs-1.9.8-linux-x86_64"
   file_name    = "#{archive_name}.tar.bz2"
-  buildpack_phantomjs_package = "https://bitbucket.org/ariya/phantomjs/downloads/#{file_name}"
+  buildpack_phantomjs_package = "https://s3-us-west-1.amazonaws.com/static-heroku-files.happyinspector/phantomjs-1.9.8-linux-x86_64.tar"
 
   puts "-----> Custom buildpack compiling phantomjs."
 
