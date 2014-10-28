@@ -42,15 +42,15 @@ def custom_build
     output=`(cd #{gs_extracted_tar_cache_path} && ./configure --disable-cups --disable-gtk --with-drivers=FILES)`; result=$?.success?
     raise "CUSTOM_BUILDPACK: Unable to configure ghostscript file (#{output})" if !result
     puts "       Compiling ghostscript binary."
-    output=`make -C #{gs_extracted_tar_cache_path}`; result=$?.success?
-    raise "CUSTOM_BUILDPACK: Unable to install ghostscript file (#{output})" if !result
+    # output=`make -C #{gs_extracted_tar_cache_path}`; result=$?.success?
+    # raise "CUSTOM_BUILDPACK: Unable to install ghostscript file (#{output})" if !result
   end
 
-  if !File.exist?(gs_bin_path) || rebuild_buildpack
-    puts "       Copying ghostscript binary."
-    output=`cp #{gs_bin_cache_path} #{gs_bin_path}`; result=$?.success?
-    raise "CUSTOM_BUILDPACK: Unable to copy ghostscript binary (#{output})" if !result
-  end
+  # if !File.exist?(gs_bin_path) || rebuild_buildpack
+  #   puts "       Copying ghostscript binary."
+  #   output=`cp #{gs_bin_cache_path} #{gs_bin_path}`; result=$?.success?
+  #   raise "CUSTOM_BUILDPACK: Unable to copy ghostscript binary (#{output})" if !result
+  # end
 
   prince_xml_cache_path = "#{cache_dir}/vendor/princexml/prince_xml.deb"
   prince_xml_remote_url = env_hash['PXML_DEB_PKG_URL']
