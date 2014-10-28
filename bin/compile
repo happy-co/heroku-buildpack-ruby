@@ -35,7 +35,7 @@ def custom_build
     puts "       Extracting ghostscript install files."
     `rm -f #{gs_bin_cache_path}`
     `rm -rf #{gs_extracted_tar_cache_path}`
-    output=`(cd #{cache_dir}/vendor && tar xzvf gs9.tar.gz -C #{env_hash['GHOST_SCRIPT_EXTRACT_DIR']}) `; result=$?.success?
+    output=`(cd #{cache_dir}/vendor && tar xzvf gs9.tar.gz) `; result=$?.success?
         puts `(cd #{cache_dir}/vendor && ls -al)`
     raise "CUSTOM_BUILDPACK: Unable to extract #{gs_tar_cache_path} file (#{output})" if !result
     puts "       Configuring ghostscript install."
